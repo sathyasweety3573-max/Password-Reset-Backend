@@ -3,31 +3,43 @@ import bcrypt from "bcrypt";
 import sendEmail from "../utils/sendEmail.js";
 import crypto from "crypto";
 
-
 async function Login(req, res) {
   try {
     const { email, password } = req.body;
 
+    // convert email to lowercase
+    const lowerCaseEmail = email.toLowerCase();
+
     // Find user by email
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: lowerCaseEmail });
+
     if (!user) {
-      return res.status(400).json({ error: "Invalid credentials" });
+      return res.status(400).json({
+        error: "Invalid credentials",
+      });
     }
 
-    // Check if password is correct
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Check password
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.password
+    );
+
     if (!isPasswordValid) {
-      return res.status(400).json({ error: "Invalid credentials" });
+      return res.status(400).json({
+        error: "Invalid credentials",
+      });
     }
 
-    // If authentication is successful, return success response
-    return res
-      .status(200)
-      .json({ message: "Authentication successful", user: user._id });
+    return res.status(200).json({
+      message: "Authentication successful",
+      user: user._id,
+    });
+
   } catch (error) {
-    return res
-      .status(500)
-      .json({ error: "Error authenticating user: " + error.message });
+    return res.status(500).json({
+      error: "Error authenticating user: " + error.message,
+    });
   }
 }
 
@@ -35,8 +47,18 @@ async function forgotPassword(req, res) {
   try {
     const { email } = req.body;
 
-    // Check if user exists in database
-    const user = await User.findOne({ email });
+    // console log for checking
+    console.log("Email from frontend:", email);
+
+    // convert email to lowercase
+    const lowerCaseEmail = email.toLowerCase();
+
+    // Check if user exists
+    const user = await User.findOne({
+      email: lowerCaseEmail,
+    });
+
+    console.log("User found:", user);
 
     if (!user) {
       return res.status(400).json({
@@ -44,25 +66,27 @@ async function forgotPassword(req, res) {
       });
     }
 
-    // Generate secure random reset token
+    // Generate token
     const token = crypto.randomBytes(20).toString("hex");
 
-    // Save token and expiry time in database
-    // expiry set to 1 day
+    // Save token and expiry
     const updateRes = await User.updateOne(
-      { email },
+      { email: lowerCaseEmail },
       {
         $set: {
           resetPasswordToken: token,
           resetPasswordExpires: Date.now() + 3600000,
         },
-      },
+      }
     );
 
     console.log(updateRes);
 
-    // Send reset token to user's email
-    const emailResponse = await sendEmail(token, email);
+    // Send email
+    const emailResponse = await sendEmail(
+      token,
+      lowerCaseEmail
+    );
 
     if (!emailResponse.success) {
       return res.status(500).json({
@@ -75,8 +99,9 @@ async function forgotPassword(req, res) {
     return res.status(200).json({
       success: true,
       message: "Password reset email sent successfully",
-      token : token
+      token: token,
     });
+
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -92,21 +117,25 @@ async function verifyResetToken(req, res) {
 
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() },
+      resetPasswordExpires: {
+        $gt: Date.now(),
+      },
     });
 
-    if (!user)
+    if (!user) {
       return res.status(400).json({
         success: false,
         message: "Invalid or expired token",
       });
+    }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Token valid",
     });
+
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error",
     });
@@ -121,36 +150,48 @@ async function resetPassword(req, res) {
 
     const user = await User.findOne({
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() },
+      resetPasswordExpires: {
+        $gt: Date.now(),
+      },
     });
 
-    if (!user)
+    if (!user) {
       return res.status(400).json({
         success: false,
         error: "Invalid or expired token",
       });
+    }
 
     const salt = await bcrypt.genSalt(10);
 
-    user.password = await bcrypt.hash(confirmPassword, salt);
+    user.password = await bcrypt.hash(
+      confirmPassword,
+      salt
+    );
 
     user.resetPasswordToken = null;
     user.resetPasswordExpires = null;
 
     await user.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Password reset successful",
     });
+
   } catch (error) {
     console.log(error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: "Server error",
     });
   }
 }
 
-export { Login, forgotPassword, verifyResetToken, resetPassword };
+export {
+  Login,
+  forgotPassword,
+  verifyResetToken,
+  resetPassword,
+};
