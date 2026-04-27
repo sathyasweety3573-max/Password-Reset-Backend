@@ -12,13 +12,14 @@ async function Login(req, res) {
       password,
     } = req.body;
 
-    // convert email to lowercase
+    // lowercase email
     const lowerCaseEmail =
       email.toLowerCase();
 
     // find user
     const user =
       await User.findOne({
+
         email:
           lowerCaseEmail,
       });
@@ -143,7 +144,6 @@ async function forgotPassword(
     user.resetPasswordToken =
       token;
 
-    // token expiry
     user.resetPasswordExpires =
       Date.now() +
       3600000;
@@ -189,7 +189,6 @@ async function forgotPassword(
       "EMAIL SENT SUCCESSFULLY"
     );
 
-    // IMPORTANT
     // return token
     return res.status(200).json({
 
@@ -264,7 +263,7 @@ async function verifyResetToken(
       });
     }
 
-    // valid token
+    // success
     return res.status(200).json({
 
       success: true,
@@ -309,11 +308,11 @@ async function resetPassword(
     } = req.body;
 
     console.log(
-      "RESET TOKEN:",
+      "RESET TOKEN RECEIVED:",
       token
     );
 
-    // passwords check
+    // password check
     if (
       newPassword !==
       confirmPassword
@@ -328,7 +327,16 @@ async function resetPassword(
       });
     }
 
-    // find user
+    // DEBUG
+    const allUsers =
+      await User.find();
+
+    console.log(
+      "ALL USERS:",
+      allUsers
+    );
+
+    // find matching user
     const user =
       await User.findOne({
 
@@ -343,7 +351,7 @@ async function resetPassword(
       });
 
     console.log(
-      "USER FOR RESET:",
+      "MATCHED USER:",
       user
     );
 
@@ -371,7 +379,7 @@ async function resetPassword(
         salt
       );
 
-    // remove token
+    // clear token
     user.resetPasswordToken =
       null;
 
