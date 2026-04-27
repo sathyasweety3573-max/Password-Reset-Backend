@@ -238,12 +238,6 @@ async function verifyResetToken(
 
         resetPasswordToken:
           token,
-
-        resetPasswordExpires: {
-
-          $gt:
-            Date.now(),
-        },
       });
 
     console.log(
@@ -259,7 +253,7 @@ async function verifyResetToken(
         success: false,
 
         message:
-          "Invalid or expired token",
+          "Invalid token",
       });
     }
 
@@ -308,7 +302,7 @@ async function resetPassword(
     } = req.body;
 
     console.log(
-      "RESET TOKEN RECEIVED:",
+      "TOKEN RECEIVED:",
       token
     );
 
@@ -327,31 +321,16 @@ async function resetPassword(
       });
     }
 
-    // DEBUG
-    const allUsers =
-      await User.find();
-
-    console.log(
-      "ALL USERS:",
-      allUsers
-    );
-
     // find matching user
     const user =
       await User.findOne({
 
         resetPasswordToken:
           token,
-
-        resetPasswordExpires: {
-
-          $gt:
-            Date.now(),
-        },
       });
 
     console.log(
-      "MATCHED USER:",
+      "FOUND USER:",
       user
     );
 
@@ -363,7 +342,7 @@ async function resetPassword(
         success: false,
 
         error:
-          "Invalid or expired token",
+          "Invalid token",
       });
     }
 
