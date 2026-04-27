@@ -6,104 +6,157 @@ async function sendEmail(token, email) {
     // check token
     console.log("TOKEN:", token);
 
-    // Validate token
+    // validate token
     if (!token) {
-      throw new Error("Reset token is missing");
+      throw new Error(
+        "Reset token is missing"
+      );
     }
 
-    // Validate email
+    // validate email
     if (!email) {
-      throw new Error("Recipient email is missing");
+      throw new Error(
+        "Recipient email is missing"
+      );
     }
 
-    // Set SendGrid API key
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    // set sendgrid api key
+    sgMail.setApiKey(
+      process.env.SENDGRID_API_KEY
+    );
 
-    // Reset link
-    const resetLink = `https://e-mart-web.netlify.app/reset-password/${token}`;
+    // reset link
+    const resetLink =
+      `https://e-mart-web.netlify.app/reset-password/${token}`;
 
-    console.log("RESET LINK:", resetLink);
+    console.log(
+      "RESET LINK:",
+      resetLink
+    );
 
-    // Email message
+    // email message
     const msg = {
+
       to: email,
 
-      from: process.env.EMAIL_USER,
+      from: {
+        email:
+          process.env.EMAIL_USER,
 
-      subject: "Password Reset Request",
+        name: "E-Mart Support",
+      },
 
-      replyTo: "sathyapandi3573@gmail.com",
+      subject:
+        "Reset Your Password",
 
-      text: `
-Password Reset Request
-
-We received a request to reset your password.
-
-Click the link below to reset your password:
-
-${resetLink}
-
-This link will expire in 1 hour.
-
-If you did not request this request, please ignore this email.
-
-Regards,
-E-mart Support Team
-      `,
+      replyTo:
+        "sathyapandi3573@gmail.com",
 
       html: `
-        <h2>Password Reset Request</h2>
+        <div
+          style="
+            font-family: Arial;
+            padding: 20px;
+          "
+        >
 
-        <p>We received a request to reset your password.</p>
+          <h2>
+            Password Reset Request
+          </h2>
 
-        <p>
-          Click the link below to reset your password:
-        </p>
+          <p>
+            We received a request
+            to reset your password.
+          </p>
 
-        <a href="${resetLink}">
-          Reset Password
-        </a>
+          <p>
+            Click the button below
+            to reset your password:
+          </p>
 
-        <p>
-          This link will expire in 1 hour.
-        </p>
+          <a
+            href="${resetLink}"
 
-        <p>
-          If you did not request this, please ignore this email.
-        </p>
+            style="
+              background-color: black;
+              color: white;
+              padding: 12px 20px;
+              text-decoration: none;
+              border-radius: 5px;
+              display: inline-block;
+              margin-top: 10px;
+            "
+          >
+            Reset Password
+          </a>
 
-        <br />
+          <p
+            style="
+              margin-top: 20px;
+            "
+          >
+            This link will expire
+            in 1 hour.
+          </p>
 
-        <p>
-          Regards,
+          <p>
+            If you did not request
+            this, please ignore
+            this email.
+          </p>
+
           <br />
-          E-mart Support Team
-        </p>
+
+          <p>
+            Regards,
+            <br />
+            E-Mart Support Team
+          </p>
+
+        </div>
       `,
     };
 
-    // Send email
-    const response = await sgMail.send(msg);
+    // send email
+    const response =
+      await sgMail.send(msg);
 
-    console.log("Email sent successfully");
+    console.log(
+      "EMAIL SENT SUCCESSFULLY"
+    );
+
+    console.log(
+      "SENDGRID RESPONSE:",
+      response
+    );
 
     return {
       success: true,
-      message: "Email sent successfully",
+
+      message:
+        "Email sent successfully",
+
       response,
     };
 
   } catch (error) {
 
     console.error(
-      "Email sending failed:",
+      "EMAIL SENDING FAILED:",
+      error.response?.body ||
       error.message
     );
 
     return {
+
       success: false,
-      message: "Failed to send email",
-      error: error.message,
+
+      message:
+        "Failed to send email",
+
+      error:
+        error.response?.body ||
+        error.message,
     };
   }
 }
