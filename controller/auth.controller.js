@@ -4,89 +4,149 @@ import sendEmail from "../utils/sendEmail.js";
 import crypto from "crypto";
 
 async function Login(req, res) {
+
   try {
 
-    const { email, password } = req.body;
+    const {
+      email,
+      password,
+    } = req.body;
 
     // convert email to lowercase
-    const lowerCaseEmail = email.toLowerCase();
+    const lowerCaseEmail =
+      email.toLowerCase();
 
     // find user
-    const user = await User.findOne({
-      email: lowerCaseEmail,
-    });
+    const user =
+      await User.findOne({
+        email:
+          lowerCaseEmail,
+      });
 
+    // user not found
     if (!user) {
+
       return res.status(400).json({
-        error: "Invalid credentials",
+
+        success: false,
+
+        error:
+          "Invalid credentials",
       });
     }
 
     // compare password
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isPasswordValid =
+      await bcrypt.compare(
 
+        password,
+
+        user.password
+      );
+
+    // invalid password
     if (!isPasswordValid) {
+
       return res.status(400).json({
-        error: "Invalid credentials",
+
+        success: false,
+
+        error:
+          "Invalid credentials",
       });
     }
 
+    // success
     return res.status(200).json({
+
       success: true,
-      message: "Authentication successful",
+
+      message:
+        "Authentication successful",
+
       user: user._id,
     });
 
   } catch (error) {
 
-    console.log("LOGIN ERROR:", error);
+    console.log(
+      "LOGIN ERROR:",
+      error
+    );
 
     return res.status(500).json({
+
       success: false,
-      error: "Error authenticating user",
+
+      error:
+        "Error authenticating user",
     });
   }
 }
 
-async function forgotPassword(req, res) {
+async function forgotPassword(
+  req,
+  res
+) {
+
   try {
 
-    const { email } = req.body;
+    const { email } =
+      req.body;
 
-    console.log("EMAIL FROM FRONTEND:", email);
+    console.log(
+      "EMAIL FROM FRONTEND:",
+      email
+    );
 
     // lowercase email
-    const lowerCaseEmail = email.toLowerCase();
+    const lowerCaseEmail =
+      email.toLowerCase();
 
-    // check user
-    const user = await User.findOne({
-      email: lowerCaseEmail,
-    });
+    // find user
+    const user =
+      await User.findOne({
 
-    console.log("USER FOUND:", user);
+        email:
+          lowerCaseEmail,
+      });
 
+    console.log(
+      "USER FOUND:",
+      user
+    );
+
+    // user not found
     if (!user) {
+
       return res.status(400).json({
+
         success: false,
-        error: "User with this email does not exist",
+
+        error:
+          "User with this email does not exist",
       });
     }
 
     // generate token
-    const token = crypto
-      .randomBytes(20)
-      .toString("hex");
+    const token =
+      crypto
+        .randomBytes(20)
+        .toString("hex");
 
-    console.log("GENERATED TOKEN:", token);
+    console.log(
+      "GENERATED TOKEN:",
+      token
+    );
 
-    // save token in database
-    user.resetPasswordToken = token;
+    // save token
+    user.resetPasswordToken =
+      token;
 
+    // token expiry
     user.resetPasswordExpires =
-      Date.now() + 3600000;
+      Date.now() +
+      3600000;
 
     await user.save();
 
@@ -95,10 +155,13 @@ async function forgotPassword(req, res) {
     );
 
     // send email
-    const emailResponse = await sendEmail(
-      token,
-      lowerCaseEmail
-    );
+    const emailResponse =
+      await sendEmail(
+
+        token,
+
+        lowerCaseEmail
+      );
 
     console.log(
       "EMAIL RESPONSE:",
@@ -106,16 +169,19 @@ async function forgotPassword(req, res) {
     );
 
     // email failed
-    if (!emailResponse.success) {
-
-      console.log(
-        "EMAIL SENDING FAILED"
-      );
+    if (
+      !emailResponse.success
+    ) {
 
       return res.status(500).json({
+
         success: false,
-        message: "Email sending failed",
-        error: emailResponse.error,
+
+        message:
+          "Email sending failed",
+
+        error:
+          emailResponse.error,
       });
     }
 
@@ -123,10 +189,16 @@ async function forgotPassword(req, res) {
       "EMAIL SENT SUCCESSFULLY"
     );
 
+    // IMPORTANT
+    // return token
     return res.status(200).json({
+
       success: true,
+
       message:
         "Password reset email sent successfully",
+
+      token: token,
     });
 
   } catch (error) {
@@ -137,42 +209,68 @@ async function forgotPassword(req, res) {
     );
 
     return res.status(500).json({
+
       success: false,
-      error: "Server error",
+
+      error:
+        "Server error",
     });
   }
 }
 
-async function verifyResetToken(req, res) {
+async function verifyResetToken(
+  req,
+  res
+) {
+
   try {
 
-    const { token } = req.params;
+    const { token } =
+      req.params;
 
     console.log(
       "VERIFY TOKEN:",
       token
     );
 
-    const user = await User.findOne({
-      resetPasswordToken: token,
+    // find user
+    const user =
+      await User.findOne({
 
-      resetPasswordExpires: {
-        $gt: Date.now(),
-      },
-    });
+        resetPasswordToken:
+          token,
 
+        resetPasswordExpires: {
+
+          $gt:
+            Date.now(),
+        },
+      });
+
+    console.log(
+      "VERIFY USER:",
+      user
+    );
+
+    // invalid token
     if (!user) {
 
       return res.status(400).json({
+
         success: false,
+
         message:
           "Invalid or expired token",
       });
     }
 
+    // valid token
     return res.status(200).json({
+
       success: true,
-      message: "Token valid",
+
+      message:
+        "Token valid",
     });
 
   } catch (error) {
@@ -183,20 +281,31 @@ async function verifyResetToken(req, res) {
     );
 
     return res.status(500).json({
+
       success: false,
-      message: "Server error",
+
+      error:
+        "Server error",
     });
   }
 }
 
-async function resetPassword(req, res) {
+async function resetPassword(
+  req,
+  res
+) {
+
   try {
 
-    const { token } = req.params;
+    const { token } =
+      req.params;
 
     const {
+
       newPassword,
+
       confirmPassword,
+
     } = req.body;
 
     console.log(
@@ -204,36 +313,47 @@ async function resetPassword(req, res) {
       token
     );
 
-    // check passwords
+    // passwords check
     if (
-      newPassword !== confirmPassword
+      newPassword !==
+      confirmPassword
     ) {
 
       return res.status(400).json({
+
         success: false,
+
         error:
           "Passwords do not match",
       });
     }
 
     // find user
-    const user = await User.findOne({
-      resetPasswordToken: token,
+    const user =
+      await User.findOne({
 
-      resetPasswordExpires: {
-        $gt: Date.now(),
-      },
-    });
+        resetPasswordToken:
+          token,
+
+        resetPasswordExpires: {
+
+          $gt:
+            Date.now(),
+        },
+      });
 
     console.log(
       "USER FOR RESET:",
       user
     );
 
+    // invalid token
     if (!user) {
 
       return res.status(400).json({
+
         success: false,
+
         error:
           "Invalid or expired token",
       });
@@ -245,14 +365,18 @@ async function resetPassword(req, res) {
 
     user.password =
       await bcrypt.hash(
-        confirmPassword,
+
+        newPassword,
+
         salt
       );
 
     // remove token
-    user.resetPasswordToken = null;
+    user.resetPasswordToken =
+      null;
 
-    user.resetPasswordExpires = null;
+    user.resetPasswordExpires =
+      null;
 
     await user.save();
 
@@ -260,8 +384,11 @@ async function resetPassword(req, res) {
       "PASSWORD RESET SUCCESS"
     );
 
+    // success
     return res.status(200).json({
+
       success: true,
+
       message:
         "Password reset successful",
     });
@@ -274,15 +401,22 @@ async function resetPassword(req, res) {
     );
 
     return res.status(500).json({
+
       success: false,
-      error: "Server error",
+
+      error:
+        "Server error",
     });
   }
 }
 
 export {
+
   Login,
+
   forgotPassword,
+
   verifyResetToken,
+
   resetPassword,
 };
