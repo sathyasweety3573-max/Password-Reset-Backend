@@ -355,11 +355,8 @@ async function resetPassword(
       req.params;
 
     const {
-
       newPassword,
-
       confirmPassword,
-
     } = req.body;
 
     console.log(
@@ -367,46 +364,7 @@ async function resetPassword(
       token
     );
 
-    console.log(
-      "NEW PASSWORD:",
-      newPassword
-    );
-
-    // all users debug
-    const allUsers =
-      await User.find();
-
-    console.log(
-      "ALL USERS:",
-      allUsers
-    );
-
-    // find user
-    const user =
-      await User.findOne({
-
-        resetPasswordToken:
-          token,
-      });
-
-    console.log(
-      "FOUND USER:",
-      user
-    );
-
-    // invalid token
-    if (!user) {
-
-      return res.status(400).json({
-
-        success: false,
-
-        error:
-          "Invalid token",
-      });
-    }
-
-    // password match check
+    // CHECK PASSWORD MATCH
     if (
       newPassword !==
       confirmPassword
@@ -421,21 +379,57 @@ async function resetPassword(
       });
     }
 
-    // hash password
+    // DEBUG ALL USERS
+    const allUsers =
+      await User.find();
+
+    console.log(
+      "ALL USERS:",
+      JSON.stringify(
+        allUsers,
+        null,
+        2
+      )
+    );
+
+    // FIND USER
+    const user =
+      await User.findOne({
+
+        resetPasswordToken: token.trim(),
+      });
+
+    console.log(
+      "FOUND USER:",
+      user
+    );
+
+    // TOKEN NOT FOUND
+    if (!user) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Invalid or expired token",
+      });
+    }
+
+    // HASH PASSWORD
     const salt =
-      await bcrypt.genSalt(
-        10
-      );
+      await bcrypt.genSalt(10);
 
-    user.password =
+    const hashedPassword =
       await bcrypt.hash(
-
         newPassword,
-
         salt
       );
 
-    // clear token
+    user.password =
+      hashedPassword;
+
+    // CLEAR TOKEN
     user.resetPasswordToken =
       null;
 
@@ -448,7 +442,6 @@ async function resetPassword(
       "PASSWORD RESET SUCCESS"
     );
 
-    // success
     return res.status(200).json({
 
       success: true,
