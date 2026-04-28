@@ -1,9 +1,17 @@
 import User from "../models/user.schema.js";
+
 import bcrypt from "bcrypt";
+
 import sendEmail from "../utils/sendEmail.js";
+
 import crypto from "crypto";
 
-async function Login(req, res) {
+
+// LOGIN
+async function Login(
+  req,
+  res
+) {
 
   try {
 
@@ -12,21 +20,31 @@ async function Login(req, res) {
       password,
     } = req.body;
 
-    // lowercase email
+    // lowercase + trim
     const lowerCaseEmail =
-      email.toLowerCase().trim();
+      email
+        .toLowerCase()
+        .trim();
 
     // find user
     const user =
       await User.findOne({
 
         email: {
-          $regex: new RegExp(
-            "^" + lowerCaseEmail + "$",
-            "i"
-          ),
+          $regex:
+            new RegExp(
+              "^" +
+              lowerCaseEmail +
+              "$",
+              "i"
+            ),
         },
       });
+
+    console.log(
+      "LOGIN USER:",
+      user
+    );
 
     // user not found
     if (!user) {
@@ -50,7 +68,9 @@ async function Login(req, res) {
       );
 
     // invalid password
-    if (!isPasswordValid) {
+    if (
+      !isPasswordValid
+    ) {
 
       return res.status(400).json({
 
@@ -89,6 +109,9 @@ async function Login(req, res) {
   }
 }
 
+
+
+// FORGOT PASSWORD
 async function forgotPassword(
   req,
   res
@@ -104,16 +127,18 @@ async function forgotPassword(
       email
     );
 
-    // lowercase email
+    // lowercase + trim
     const lowerCaseEmail =
-      email.toLowerCase().trim();
+      email
+        .toLowerCase()
+        .trim();
 
     console.log(
       "SEARCH EMAIL:",
       lowerCaseEmail
     );
 
-    // DEBUG
+    // all users debug
     const allUsers =
       await User.find();
 
@@ -127,10 +152,13 @@ async function forgotPassword(
       await User.findOne({
 
         email: {
-          $regex: new RegExp(
-            "^" + lowerCaseEmail + "$",
-            "i"
-          ),
+          $regex:
+            new RegExp(
+              "^" +
+              lowerCaseEmail +
+              "$",
+              "i"
+            ),
         },
       });
 
@@ -167,7 +195,8 @@ async function forgotPassword(
       token;
 
     user.resetPasswordExpires =
-      Date.now() + 3600000;
+      Date.now() +
+      3600000;
 
     await user.save();
 
@@ -215,7 +244,7 @@ async function forgotPassword(
       "EMAIL SENT SUCCESSFULLY"
     );
 
-    // return token
+    // success
     return res.status(200).json({
 
       success: true,
@@ -243,6 +272,9 @@ async function forgotPassword(
   }
 }
 
+
+
+// VERIFY TOKEN
 async function verifyResetToken(
   req,
   res
@@ -309,6 +341,9 @@ async function verifyResetToken(
   }
 }
 
+
+
+// RESET PASSWORD
 async function resetPassword(
   req,
   res
@@ -337,22 +372,7 @@ async function resetPassword(
       newPassword
     );
 
-    // password check
-    if (
-      newPassword !==
-      confirmPassword
-    ) {
-
-      return res.status(400).json({
-
-        success: false,
-
-        error:
-          "Passwords do not match",
-      });
-    }
-
-    // CHECK ALL USERS
+    // all users debug
     const allUsers =
       await User.find();
 
@@ -361,7 +381,7 @@ async function resetPassword(
       allUsers
     );
 
-    // find matching user
+    // find user
     const user =
       await User.findOne({
 
@@ -386,9 +406,26 @@ async function resetPassword(
       });
     }
 
+    // password match check
+    if (
+      newPassword !==
+      confirmPassword
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Passwords do not match",
+      });
+    }
+
     // hash password
     const salt =
-      await bcrypt.genSalt(10);
+      await bcrypt.genSalt(
+        10
+      );
 
     user.password =
       await bcrypt.hash(
@@ -436,6 +473,7 @@ async function resetPassword(
     });
   }
 }
+
 
 export {
 
