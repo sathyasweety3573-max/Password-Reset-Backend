@@ -154,6 +154,12 @@ async function forgotPassword(
       "TOKEN SAVED SUCCESSFULLY"
     );
 
+    // IMPORTANT DEBUG
+    console.log(
+      "TOKEN SAVED IN DB:",
+      user.resetPasswordToken
+    );
+
     // send email
     const emailResponse =
       await sendEmail(
@@ -306,6 +312,11 @@ async function resetPassword(
       token
     );
 
+    console.log(
+      "NEW PASSWORD:",
+      newPassword
+    );
+
     // password check
     if (
       newPassword !==
@@ -320,6 +331,15 @@ async function resetPassword(
           "Passwords do not match",
       });
     }
+
+    // CHECK ALL USERS
+    const allUsers =
+      await User.find();
+
+    console.log(
+      "ALL USERS:",
+      allUsers
+    );
 
     // find matching user
     const user =
