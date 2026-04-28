@@ -1,46 +1,98 @@
 import sgMail from "@sendgrid/mail";
 
 async function sendEmail(token, email) {
+
   try {
 
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+    sgMail.setApiKey(
+      process.env.SENDGRID_API_KEY
+    );
 
-    const resetLink = `https://e-mart-web.netlify.app/reset-password/${token}`;
+    // RESET LINK
+    const resetLink =
+      `https://e-mart-web.netlify.app/reset-password/${token}`;
+
+    console.log(
+      "RESET LINK:",
+      resetLink
+    );
 
     const msg = {
+
       to: email,
 
-      from: {
-        email: process.env.EMAIL_USER,
-        name: "E-Mart Support",
-      },
+      // IMPORTANT
+      from: "sathyasweety3573@gmail.com",
 
-      subject: "Reset Your Password",
+      subject:
+        "Reset Your Password",
 
-      text: `Click this link to reset your password: ${resetLink}`,
+      text:
+        `Click this link to reset your password: ${resetLink}`,
 
       html: `
         <h2>Password Reset</h2>
-        <p>Click below link:</p>
-        <a href="${resetLink}">${resetLink}</a>
+
+        <p>
+          Click the button below
+          to reset your password
+        </p>
+
+        <a
+          href="${resetLink}"
+          style="
+            background:black;
+            color:white;
+            padding:12px 20px;
+            text-decoration:none;
+            border-radius:5px;
+            display:inline-block;
+          "
+        >
+          Reset Password
+        </a>
+
+        <br /><br />
+
+        <p>
+          Or copy this link:
+        </p>
+
+        <p>
+          ${resetLink}
+        </p>
       `,
     };
 
-    const response = await sgMail.send(msg);
+    // SEND EMAIL
+    const response =
+      await sgMail.send(msg);
 
-    console.log("SENDGRID RESPONSE:", response);
+    console.log(
+      "SENDGRID RESPONSE:",
+      response
+    );
 
     return {
+
       success: true,
     };
 
   } catch (error) {
 
-    console.log("SENDGRID ERROR:", error.response?.body || error.message);
+    console.log(
+      "SENDGRID ERROR:",
+      error.response?.body ||
+      error.message
+    );
 
     return {
+
       success: false,
-      error: error.message,
+
+      error:
+        error.response?.body ||
+        error.message,
     };
   }
 }
