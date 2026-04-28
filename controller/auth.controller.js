@@ -7,6 +7,7 @@ import sendEmail from "../utils/sendEmail.js";
 import crypto from "crypto";
 
 
+
 // LOGIN
 async function Login(
   req,
@@ -111,6 +112,7 @@ async function Login(
 
 
 
+
 // FORGOT PASSWORD
 async function forgotPassword(
   req,
@@ -136,15 +138,6 @@ async function forgotPassword(
     console.log(
       "SEARCH EMAIL:",
       lowerCaseEmail
-    );
-
-    // all users debug
-    const allUsers =
-      await User.find();
-
-    console.log(
-      "ALL USERS:",
-      allUsers
     );
 
     // find user
@@ -195,18 +188,12 @@ async function forgotPassword(
       token;
 
     user.resetPasswordExpires =
-      Date.now() +
-      3600000;
+      Date.now() + 3600000;
 
     await user.save();
 
     console.log(
       "TOKEN SAVED SUCCESSFULLY"
-    );
-
-    console.log(
-      "TOKEN SAVED IN DB:",
-      user.resetPasswordToken
     );
 
     // send email
@@ -274,6 +261,7 @@ async function forgotPassword(
 
 
 
+
 // VERIFY TOKEN
 async function verifyResetToken(
   req,
@@ -295,7 +283,11 @@ async function verifyResetToken(
       await User.findOne({
 
         resetPasswordToken:
-          token,
+          token.trim(),
+
+        resetPasswordExpires: {
+          $gt: Date.now(),
+        },
       });
 
     console.log(
@@ -310,8 +302,8 @@ async function verifyResetToken(
 
         success: false,
 
-        message:
-          "Invalid token",
+        error:
+          "Invalid or expired token",
       });
     }
 
@@ -343,6 +335,7 @@ async function verifyResetToken(
 
 
 
+
 // RESET PASSWORD
 async function resetPassword(
   req,
@@ -364,7 +357,7 @@ async function resetPassword(
       token
     );
 
-    // CHECK PASSWORD MATCH
+    // password match check
     if (
       newPassword !==
       confirmPassword
@@ -379,24 +372,16 @@ async function resetPassword(
       });
     }
 
-    // DEBUG ALL USERS
-    const allUsers =
-      await User.find();
-
-    console.log(
-      "ALL USERS:",
-      JSON.stringify(
-        allUsers,
-        null,
-        2
-      )
-    );
-
-    // FIND USER
+    // find user
     const user =
       await User.findOne({
 
-        resetPasswordToken: token.trim(),
+        resetPasswordToken:
+          token.trim(),
+
+        resetPasswordExpires: {
+          $gt: Date.now(),
+        },
       });
 
     console.log(
@@ -404,7 +389,7 @@ async function resetPassword(
       user
     );
 
-    // TOKEN NOT FOUND
+    // invalid token
     if (!user) {
 
       return res.status(400).json({
@@ -416,7 +401,7 @@ async function resetPassword(
       });
     }
 
-    // HASH PASSWORD
+    // hash password
     const salt =
       await bcrypt.genSalt(10);
 
@@ -426,10 +411,11 @@ async function resetPassword(
         salt
       );
 
+    // save new password
     user.password =
       hashedPassword;
 
-    // CLEAR TOKEN
+    // clear token
     user.resetPasswordToken =
       null;
 
@@ -466,6 +452,7 @@ async function resetPassword(
     });
   }
 }
+
 
 
 export {
