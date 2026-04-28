@@ -21,7 +21,6 @@ async function Login(
       password,
     } = req.body;
 
-    // lowercase + trim
     const lowerCaseEmail =
       email
         .toLowerCase()
@@ -129,16 +128,10 @@ async function forgotPassword(
       email
     );
 
-    // lowercase + trim
     const lowerCaseEmail =
       email
         .toLowerCase()
         .trim();
-
-    console.log(
-      "SEARCH EMAIL:",
-      lowerCaseEmail
-    );
 
     // find user
     const user =
@@ -187,21 +180,28 @@ async function forgotPassword(
     user.resetPasswordToken =
       token;
 
+    // 1 hour expiry
     user.resetPasswordExpires =
-      Date.now() + 3600000;
+      new Date(
+        Date.now() + 3600000
+      );
 
     await user.save();
 
     console.log(
-      "TOKEN SAVED SUCCESSFULLY"
+      "TOKEN SAVED:",
+      user.resetPasswordToken
+    );
+
+    console.log(
+      "TOKEN EXPIRES:",
+      user.resetPasswordExpires
     );
 
     // send email
     const emailResponse =
       await sendEmail(
-
         token,
-
         lowerCaseEmail
       );
 
@@ -219,17 +219,10 @@ async function forgotPassword(
 
         success: false,
 
-        message:
-          "Email sending failed",
-
         error:
-          emailResponse.error,
+          "Email sending failed",
       });
     }
-
-    console.log(
-      "EMAIL SENT SUCCESSFULLY"
-    );
 
     // success
     return res.status(200).json({
@@ -238,8 +231,6 @@ async function forgotPassword(
 
       message:
         "Password reset email sent successfully",
-
-      token: token,
     });
 
   } catch (error) {
@@ -270,8 +261,8 @@ async function verifyResetToken(
 
   try {
 
-    const { token } =
-      req.params;
+    const token =
+      req.params.token.trim();
 
     console.log(
       "VERIFY TOKEN:",
@@ -283,11 +274,8 @@ async function verifyResetToken(
       await User.findOne({
 
         resetPasswordToken:
-          token.trim(),
+          token,
 
-        resetPasswordExpires: {
-          $gt: Date.now(),
-        },
       });
 
     console.log(
@@ -295,7 +283,7 @@ async function verifyResetToken(
       user
     );
 
-    // invalid token
+    // token invalid
     if (!user) {
 
       return res.status(400).json({
@@ -303,7 +291,22 @@ async function verifyResetToken(
         success: false,
 
         error:
-          "Invalid or expired token",
+          "Invalid token",
+      });
+    }
+
+    // token expired
+    if (
+      user.resetPasswordExpires <
+      Date.now()
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Token expired",
       });
     }
 
@@ -344,8 +347,8 @@ async function resetPassword(
 
   try {
 
-    const { token } =
-      req.params;
+    const token =
+      req.params.token.trim();
 
     const {
       newPassword,
@@ -355,6 +358,11 @@ async function resetPassword(
     console.log(
       "TOKEN RECEIVED:",
       token
+    );
+
+    console.log(
+      "REQUEST BODY:",
+      req.body
     );
 
     // password match check
@@ -377,11 +385,8 @@ async function resetPassword(
       await User.findOne({
 
         resetPasswordToken:
-          token.trim(),
+          token,
 
-        resetPasswordExpires: {
-          $gt: Date.now(),
-        },
       });
 
     console.log(
@@ -397,7 +402,22 @@ async function resetPassword(
         success: false,
 
         error:
-          "Invalid or expired token",
+          "Invalid token",
+      });
+    }
+
+    // token expired
+    if (
+      user.resetPasswordExpires <
+      Date.now()
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Token expired",
       });
     }
 
@@ -411,7 +431,7 @@ async function resetPassword(
         salt
       );
 
-    // save new password
+    // update password
     user.password =
       hashedPassword;
 
