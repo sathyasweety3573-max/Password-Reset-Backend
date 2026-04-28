@@ -14,14 +14,18 @@ async function Login(req, res) {
 
     // lowercase email
     const lowerCaseEmail =
-      email.toLowerCase();
+      email.toLowerCase().trim();
 
     // find user
     const user =
       await User.findOne({
 
-        email:
-          lowerCaseEmail,
+        email: {
+          $regex: new RegExp(
+            "^" + lowerCaseEmail + "$",
+            "i"
+          ),
+        },
       });
 
     // user not found
@@ -102,18 +106,36 @@ async function forgotPassword(
 
     // lowercase email
     const lowerCaseEmail =
-      email.toLowerCase();
+      email.toLowerCase().trim();
+
+    console.log(
+      "SEARCH EMAIL:",
+      lowerCaseEmail
+    );
+
+    // DEBUG
+    const allUsers =
+      await User.find();
+
+    console.log(
+      "ALL USERS:",
+      allUsers
+    );
 
     // find user
     const user =
       await User.findOne({
 
-        email:
-          lowerCaseEmail,
+        email: {
+          $regex: new RegExp(
+            "^" + lowerCaseEmail + "$",
+            "i"
+          ),
+        },
       });
 
     console.log(
-      "USER FOUND:",
+      "FOUND USER:",
       user
     );
 
@@ -145,8 +167,7 @@ async function forgotPassword(
       token;
 
     user.resetPasswordExpires =
-      Date.now() +
-      3600000;
+      Date.now() + 3600000;
 
     await user.save();
 
@@ -154,7 +175,6 @@ async function forgotPassword(
       "TOKEN SAVED SUCCESSFULLY"
     );
 
-    // IMPORTANT DEBUG
     console.log(
       "TOKEN SAVED IN DB:",
       user.resetPasswordToken
