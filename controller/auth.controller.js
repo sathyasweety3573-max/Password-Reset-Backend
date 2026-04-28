@@ -347,8 +347,13 @@ async function resetPassword(
 
   try {
 
+    const rawToken =
+      req.params.token;
+
     const token =
-      req.params.token.trim();
+      decodeURIComponent(
+        rawToken
+      ).trim();
 
     const {
       newPassword,
@@ -356,16 +361,16 @@ async function resetPassword(
     } = req.body;
 
     console.log(
-      "TOKEN RECEIVED:",
-      token
+      "RAW TOKEN:",
+      rawToken
     );
 
     console.log(
-      "REQUEST BODY:",
-      req.body
+      "DECODED TOKEN:",
+      token
     );
 
-    // password match check
+    // password check
     if (
       newPassword !==
       confirmPassword
@@ -380,21 +385,36 @@ async function resetPassword(
       });
     }
 
-    // find user
+    // get all users
+    const users =
+      await User.find();
+
+    console.log(
+      "ALL TOKENS:"
+    );
+
+    users.forEach((u) => {
+
+      console.log(
+        u.email,
+        u.resetPasswordToken
+      );
+
+    });
+
+    // find matching user
     const user =
       await User.findOne({
 
         resetPasswordToken:
           token,
-
       });
 
     console.log(
-      "FOUND USER:",
+      "MATCHED USER:",
       user
     );
 
-    // invalid token
     if (!user) {
 
       return res.status(400).json({
@@ -402,22 +422,7 @@ async function resetPassword(
         success: false,
 
         error:
-          "Invalid token",
-      });
-    }
-
-    // token expired
-    if (
-      user.resetPasswordExpires <
-      Date.now()
-    ) {
-
-      return res.status(400).json({
-
-        success: false,
-
-        error:
-          "Token expired",
+          "Invalid or expired token",
       });
     }
 
@@ -425,15 +430,11 @@ async function resetPassword(
     const salt =
       await bcrypt.genSalt(10);
 
-    const hashedPassword =
+    user.password =
       await bcrypt.hash(
         newPassword,
         salt
       );
-
-    // update password
-    user.password =
-      hashedPassword;
 
     // clear token
     user.resetPasswordToken =
@@ -443,10 +444,6 @@ async function resetPassword(
       null;
 
     await user.save();
-
-    console.log(
-      "PASSWORD RESET SUCCESS"
-    );
 
     return res.status(200).json({
 
@@ -459,7 +456,7 @@ async function resetPassword(
   } catch (error) {
 
     console.log(
-      "RESET PASSWORD ERROR:",
+      "RESET ERROR:",
       error
     );
 
@@ -472,8 +469,6 @@ async function resetPassword(
     });
   }
 }
-
-
 
 export {
 
