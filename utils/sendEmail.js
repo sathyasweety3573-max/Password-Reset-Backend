@@ -4,11 +4,12 @@ async function sendEmail(token, email) {
 
   try {
 
+    // SENDGRID API KEY
     sgMail.setApiKey(
       process.env.SENDGRID_API_KEY
     );
 
-    // RESET LINK
+    // FRONTEND RESET URL
     const resetLink =
       `https://e-mart-web.netlify.app/reset-password/${token}`;
 
@@ -17,46 +18,34 @@ async function sendEmail(token, email) {
       resetLink
     );
 
+    // EMAIL CONTENT
     const msg = {
 
       to: email,
 
-      // IMPORTANT
-      from: "sathyasweety3573@gmail.com",
+      // VERIFIED SENDER
+      from:
+        "sathyasweety3573@gmail.com",
 
       subject:
         "Reset Your Password",
 
       text:
-        `Click this link to reset your password: ${resetLink}`,
+        `Reset your password using this link: ${resetLink}`,
 
       html: `
         <h2>Password Reset</h2>
 
         <p>
-          Click the button below
+          Click the link below
           to reset your password
         </p>
 
-        <a
-          href="${resetLink}"
-          style="
-            background:black;
-            color:white;
-            padding:12px 20px;
-            text-decoration:none;
-            border-radius:5px;
-            display:inline-block;
-          "
-        >
+        <a href="${resetLink}">
           Reset Password
         </a>
 
         <br /><br />
-
-        <p>
-          Or copy this link:
-        </p>
 
         <p>
           ${resetLink}
@@ -91,7 +80,6 @@ async function sendEmail(token, email) {
       success: false,
 
       error:
-        error.response?.body ||
         error.message,
     };
   }
