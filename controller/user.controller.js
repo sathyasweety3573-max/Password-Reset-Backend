@@ -1,33 +1,116 @@
 import User from "../models/user.schema.js";
+
 import bcrypt from "bcrypt";
 
-async function createUser(req, res) {
-  try {
-    const { name, email, password } = req.body;
+async function createUser(
+  req,
+  res
+) {
 
-    // check if user with the same email already exists
-    const existingUser = await User.findOne({ email: email });
-    if (existingUser) {
-      return res
-        .status(400)
-        .json({ error: "User with this email already exists" });
+  try {
+
+    const {
+      name,
+      email,
+      password,
+    } = req.body;
+
+    // validation
+    if (
+      !name ||
+      !email ||
+      !password
+    ) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "All fields are required",
+
+      });
+
     }
 
-    //Hash the password before saving to the database
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // lowercase email
+    const lowerCaseEmail =
+      email.toLowerCase().trim();
 
-    // create new user
-    const user = await User.create({ name, email, password: hashedPassword });
+    // check existing user
+    const existingUser =
+      await User.findOne({
 
-    return res
-      .status(201)
-      .json({ message: "User created successfully", user: user._id });
+        email: lowerCaseEmail,
+
+      });
+
+    if (existingUser) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "User with this email already exists",
+
+      });
+
+    }
+
+    // hash password
+    const salt =
+      await bcrypt.genSalt(10);
+
+    const hashedPassword =
+      await bcrypt.hash(
+        password,
+        salt
+      );
+
+    // create user
+    const user =
+      await User.create({
+
+        name,
+
+        email:
+          lowerCaseEmail,
+
+        password:
+          hashedPassword,
+
+      });
+
+    return res.status(201).json({
+
+      success: true,
+
+      message:
+        "User created successfully",
+
+      user: user._id,
+
+    });
+
   } catch (error) {
-    return res
-      .status(500)
-      .json({ error: "Error creating user: " + error.message });
+
+    console.log(
+      "CREATE USER ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+
+      success: false,
+
+      error:
+        "Server error",
+
+    });
+
   }
+
 }
 
 export default createUser;

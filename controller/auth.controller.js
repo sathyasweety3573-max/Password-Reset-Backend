@@ -9,8 +9,19 @@ async function Login(req, res) {
 
   try {
 
-    const { email, password } =
-      req.body;
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error: "Email and password are required",
+
+      });
+
+    }
 
     const lowerCaseEmail =
       email.toLowerCase().trim();
@@ -18,14 +29,7 @@ async function Login(req, res) {
     const user =
       await User.findOne({
 
-        email: {
-          $regex: new RegExp(
-            "^" +
-            lowerCaseEmail +
-            "$",
-            "i"
-          ),
-        },
+        email: lowerCaseEmail,
 
       });
 
@@ -35,8 +39,7 @@ async function Login(req, res) {
 
         success: false,
 
-        error:
-          "Invalid credentials",
+        error: "Invalid credentials",
 
       });
 
@@ -54,8 +57,7 @@ async function Login(req, res) {
 
         success: false,
 
-        error:
-          "Invalid credentials",
+        error: "Invalid credentials",
 
       });
 
@@ -65,8 +67,7 @@ async function Login(req, res) {
 
       success: true,
 
-      message:
-        "Authentication successful",
+      message: "Login successful",
 
       user: user._id,
 
@@ -83,14 +84,14 @@ async function Login(req, res) {
 
       success: false,
 
-      error:
-        "Server error",
+      error: "Server error",
 
     });
 
   }
 
 }
+
 
 
 // FORGOT PASSWORD
@@ -101,8 +102,19 @@ async function forgotPassword(
 
   try {
 
-    const { email } =
-      req.body;
+    const { email } = req.body;
+
+    if (!email) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error: "Email is required",
+
+      });
+
+    }
 
     const lowerCaseEmail =
       email.toLowerCase().trim();
@@ -110,14 +122,7 @@ async function forgotPassword(
     const user =
       await User.findOne({
 
-        email: {
-          $regex: new RegExp(
-            "^" +
-            lowerCaseEmail +
-            "$",
-            "i"
-          ),
-        },
+        email: lowerCaseEmail,
 
       });
 
@@ -132,8 +137,7 @@ async function forgotPassword(
 
         success: false,
 
-        error:
-          "User not found",
+        error: "User not found",
 
       });
 
@@ -141,7 +145,7 @@ async function forgotPassword(
 
     const token =
       crypto
-        .randomBytes(20)
+        .randomBytes(32)
         .toString("hex");
 
     user.resetPasswordToken =
@@ -157,17 +161,30 @@ async function forgotPassword(
       token
     );
 
-    await sendEmail(
-      token,
-      lowerCaseEmail
-    );
+    const emailResponse =
+      await sendEmail(
+        token,
+        lowerCaseEmail
+      );
+
+    if (!emailResponse.success) {
+
+      return res.status(500).json({
+
+        success: false,
+
+        error: "Email sending failed",
+
+      });
+
+    }
 
     return res.status(200).json({
 
       success: true,
 
       message:
-        "Reset email sent",
+        "Password reset email sent successfully",
 
     });
 
@@ -182,14 +199,14 @@ async function forgotPassword(
 
       success: false,
 
-      error:
-        "Server error",
+      error: "Server error",
 
     });
 
   }
 
 }
+
 
 
 // VERIFY TOKEN
@@ -206,8 +223,11 @@ async function verifyResetToken(
     const user =
       await User.findOne({
 
-        resetPasswordToken:
-          token,
+        resetPasswordToken: token,
+
+        resetPasswordExpires: {
+          $gt: Date.now(),
+        },
 
       });
 
@@ -218,7 +238,7 @@ async function verifyResetToken(
         success: false,
 
         error:
-          "Invalid token",
+          "Invalid or expired token",
 
       });
 
@@ -228,8 +248,7 @@ async function verifyResetToken(
 
       success: true,
 
-      message:
-        "Token valid",
+      message: "Token valid",
 
     });
 
@@ -244,14 +263,14 @@ async function verifyResetToken(
 
       success: false,
 
-      error:
-        "Server error",
+      error: "Server error",
 
     });
 
   }
 
 }
+
 
 
 // RESET PASSWORD
@@ -275,47 +294,17 @@ async function resetPassword(
       token
     );
 
-    const allUsers =
-      await User.find();
-
-    console.log(
-      "ALL USERS TOKENS:"
-    );
-
-    allUsers.forEach((user) => {
-
-      console.log({
-
-        email: user.email,
-
-        token:
-          user.resetPasswordToken,
-
-      });
-
-    });
-
-    const user =
-      await User.findOne({
-
-        resetPasswordToken:
-          token,
-
-      });
-
-    console.log(
-      "MATCH USER:",
-      user
-    );
-
-    if (!user) {
+    if (
+      !newPassword ||
+      !confirmPassword
+    ) {
 
       return res.status(400).json({
 
         success: false,
 
         error:
-          "Invalid token",
+          "All fields are required",
 
       });
 
@@ -337,14 +326,46 @@ async function resetPassword(
 
     }
 
+    const user =
+      await User.findOne({
+
+        resetPasswordToken: token,
+
+        resetPasswordExpires: {
+          $gt: Date.now(),
+        },
+
+      });
+
+    console.log(
+      "MATCH USER:",
+      user
+    );
+
+    if (!user) {
+
+      return res.status(400).json({
+
+        success: false,
+
+        error:
+          "Invalid or expired token",
+
+      });
+
+    }
+
     const salt =
       await bcrypt.genSalt(10);
 
-    user.password =
+    const hashedPassword =
       await bcrypt.hash(
         newPassword,
         salt
       );
+
+    user.password =
+      hashedPassword;
 
     user.resetPasswordToken =
       null;
@@ -374,8 +395,7 @@ async function resetPassword(
 
       success: false,
 
-      error:
-        "Server error",
+      error: "Server error",
 
     });
 
