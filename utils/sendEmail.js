@@ -12,10 +12,10 @@ const sendEmail = async (
     );
 
     // IMPORTANT
-    // change this to your frontend URL
+    
     const resetLink =
 
-      `https://e-mart-web.netlify.app/reset-password/${token}`;
+      `https://zingy-pie-c61a18.netlify.app/${token}`;
 
     console.log(
       "RESET LINK:",
