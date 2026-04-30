@@ -9,7 +9,7 @@ async function sendEmail(token, email) {
     );
 
     const resetLink =
-      `https://e-mart-web.netlify.app/reset-password/${token}`;
+      `https://amazing-biscotti-c4fc27.netlify.app/${token}`;
 
     const msg = {
 
