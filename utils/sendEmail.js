@@ -1,9 +1,6 @@
 import sgMail from "@sendgrid/mail";
 
-const sendEmail = async (
-  token,
-  email
-) => {
+async function sendEmail(token, email) {
 
   try {
 
@@ -11,92 +8,46 @@ const sendEmail = async (
       process.env.SENDGRID_API_KEY
     );
 
-    // IMPORTANT
-    
     const resetLink =
-
-      `https://zingy-pie-c61a18.netlify.app/${token}`;
-
-    console.log(
-      "RESET LINK:",
-      resetLink
-    );
+      `https://e-mart-web.netlify.app/reset-password/${token}`;
 
     const msg = {
 
       to: email,
 
-      from: {
-
-        email:
-          "sathyasweety3573@gmail.com",
-
-        name:
-          "E-Mart Support",
-
-      },
+      from:
+        "sathyasweety3573@gmail.com",
 
       subject:
-        "Password Reset Request",
+        "Reset Your Password",
 
       text:
-        `Click this link to reset your password: ${resetLink}`,
+        `Reset your password: ${resetLink}`,
 
       html: `
-        <div style="font-family: Arial;">
+        <h2>Password Reset</h2>
 
-          <h2>
-            Reset Your Password
-          </h2>
+        <p>
+          Click below link
+          to reset password
+        </p>
 
-          <p>
-            Click the button below
-            to reset your password.
-          </p>
-
-          <a
-            href="${resetLink}"
-            style="
-              background:black;
-              color:white;
-              padding:12px 20px;
-              text-decoration:none;
-              border-radius:5px;
-              display:inline-block;
-            "
-          >
-            Reset Password
-          </a>
-
-          <p>
-            Or copy this link:
-          </p>
-
-          <p>
-            ${resetLink}
-          </p>
-
-        </div>
+        <a href="${resetLink}">
+          Reset Password
+        </a>
       `,
-
     };
 
     await sgMail.send(msg);
 
-    console.log(
-      "EMAIL SENT SUCCESSFULLY"
-    );
-
     return {
-
       success: true,
-
     };
 
   } catch (error) {
 
     console.log(
-      "SEND EMAIL ERROR:",
+      "SENDGRID ERROR:",
       error.response?.body ||
       error.message
     );
@@ -112,6 +63,6 @@ const sendEmail = async (
 
   }
 
-};
+}
 
 export default sendEmail;
