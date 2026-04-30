@@ -19,13 +19,13 @@ async function sendEmail(token, email) {
         "sathyasweety3573@gmail.com",
 
       subject:
-        "Reset Your Password",
+        "Reset Password",
 
       text:
-        `Reset your password: ${resetLink}`,
+        `Reset your password using this link: ${resetLink}`,
 
       html: `
-        <h2>Password Reset</h2>
+        <h2>Reset Password</h2>
 
         <p>
           Click below link
