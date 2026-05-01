@@ -15,7 +15,8 @@ async function createUser(
       password,
     } = req.body;
 
-    // validation
+    // CHECK REQUIRED FIELDS
+
     if (
       !name ||
       !email ||
@@ -33,15 +34,20 @@ async function createUser(
 
     }
 
-    // lowercase email
-    const lowerCaseEmail =
-      email.toLowerCase().trim();
+    // CLEAN EMAIL
 
-    // check existing user
+    const lowerCaseEmail =
+      email
+        .toLowerCase()
+        .trim();
+
+    // CHECK EXISTING USER
+
     const existingUser =
       await User.findOne({
 
-        email: lowerCaseEmail,
+        email:
+          lowerCaseEmail,
 
       });
 
@@ -52,13 +58,14 @@ async function createUser(
         success: false,
 
         error:
-          "User with this email already exists",
+          "User already exists",
 
       });
 
     }
 
-    // hash password
+    // HASH PASSWORD
+
     const salt =
       await bcrypt.genSalt(10);
 
@@ -68,11 +75,13 @@ async function createUser(
         salt
       );
 
-    // create user
-    const user =
+    // CREATE USER
+
+    const newUser =
       await User.create({
 
-        name,
+        name:
+          name.trim(),
 
         email:
           lowerCaseEmail,
@@ -87,16 +96,17 @@ async function createUser(
       success: true,
 
       message:
-        "User created successfully",
+        "Signup successful",
 
-      user: user._id,
+      user:
+        newUser._id,
 
     });
 
   } catch (error) {
 
     console.log(
-      "CREATE USER ERROR:",
+      "SIGNUP ERROR:",
       error
     );
 
@@ -105,7 +115,7 @@ async function createUser(
       success: false,
 
       error:
-        "Server error",
+        "Error creating user",
 
     });
 
