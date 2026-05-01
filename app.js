@@ -26,23 +26,9 @@ const app = express();
 app.use(express.json());
 
 app.use(
-
   cors({
-
-    origin:
-      "https://amazing-biscotti-c4fc27.netlify.app",
-
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "DELETE",
-    ],
-
-    credentials: true,
-
+    origin: "*",
   })
-
 );
 
 
