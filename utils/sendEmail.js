@@ -1,6 +1,9 @@
 import sgMail from "@sendgrid/mail";
 
-async function sendEmail(token, email) {
+async function sendEmail(
+  token,
+  email
+) {
 
   try {
 
@@ -8,8 +11,15 @@ async function sendEmail(token, email) {
       process.env.SENDGRID_API_KEY
     );
 
+    // RESET PASSWORD PAGE URL
     const resetLink =
-      `https://amazing-biscotti-c4fc27.netlify.app/${token}`;
+
+      `https://amazing-biscotti-c4fc27.netlify.app/reset-password/${token}`;
+
+    console.log(
+      "RESET LINK:",
+      resetLink
+    );
 
     const msg = {
 
@@ -28,14 +38,21 @@ async function sendEmail(token, email) {
         <h2>Reset Password</h2>
 
         <p>
-          Click below link
-          to reset password
+          Click the button below
+          to reset your password
         </p>
 
         <a href="${resetLink}">
           Reset Password
         </a>
+
+        <br /><br />
+
+        <p>
+          ${resetLink}
+        </p>
       `,
+
     };
 
     await sgMail.send(msg);
